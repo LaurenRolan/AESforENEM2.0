@@ -96,18 +96,22 @@ def get_essays_by_link(driver : webdriver.Chrome, links_file : str):
         if n_files >= id + 1:
             continue
         
-        driver.get(link)
-        sleep(1)
-        paragraphs = driver.find_element(By.CLASS_NAME, 'area-redacao-corrigida').find_elements(By.TAG_NAME, 'p')
-        essay_raw = ""
-        for p in paragraphs:
-            essay_raw += p.text
-        essay_clean = re.sub("\(.*?\)", "", essay_raw.text)
-        
-        output_dir.mkdir(parents=True, exist_ok=True)
-        f = codecs.open(output_dir / f"{id}.txt", "w", "utf-8")
-        f.write(essay_clean)
-        f.close()
+        try:
+            driver.get(link)
+            sleep(1)
+            paragraphs = driver.find_element(By.CLASS_NAME, 'area-redacao-corrigida').find_elements(By.TAG_NAME, 'p')
+        except Exception as error:
+            print("Error occured:", error)
+        else:
+            essay_raw = ""
+            for p in paragraphs:
+                essay_raw += p.text
+            essay_clean = re.sub("\(.*?\)", "", essay_raw)
+            
+            output_dir.mkdir(parents=True, exist_ok=True)
+            f = codecs.open(output_dir / f"{id}.txt", "w", "utf-8")
+            f.write(essay_clean)
+            f.close()
 
 if __name__ == '__main__':
     args = sys.argv
@@ -117,12 +121,7 @@ if __name__ == '__main__':
     
     args = args[1:]
     
-    options = webdriver.ChromeOptions()
-    options.add_argument('--ignore-certificate-errors')
-    options.add_argument('--ignore-ssl-errors')
-    options.add_argument("--log-level=3")
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    driver = webdriver.Chrome(options=options, keep_alive=True)
+    driver = webdriver.Chrome()
     
     # Set window on my left screen and maximize
     driver.set_window_position(-1000, 0)
